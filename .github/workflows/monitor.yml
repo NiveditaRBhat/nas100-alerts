@@ -6,7 +6,7 @@ on:
     - cron: "*/5 * * * 0-5"
   push:
     branches: [main]
-    paths: ["monitor.py", ".github/workflows/monitor.yml"]
+    paths: ["monitor.py", "signals.py", ".github/workflows/monitor.yml"]
   workflow_dispatch:
     inputs:
       test:
@@ -41,18 +41,16 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Send test notification
-        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.test) }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
         run: python monitor.py --test
 
       - name: Check market and alert
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
-        env:
-          ACTIVE_HOURS_DUBAI: ${{ vars.ACTIVE_HOURS_DUBAI || '0-24' }}
         run: python monitor.py
 
       - name: Save state
         run: |
           git config user.name "nas100-bot"
           git config user.email "nas100-bot@users.noreply.github.com"
-          git add state.json 2>/dev/null || true
-          git diff --cached --quiet || (git commit -m "update state" && git push)
+          git add state.json; git add signals.csv 2>/dev/null || true
+          git diff --cached --quiet || (git commit -q -m "update state" && git pull -q --rebase && git push -q)
