@@ -1,5 +1,7 @@
 # NAS100 Alerts — Setup Guide (about 15 minutes, all free)
 
+> **Already installed for you.** Your topic is `niv-nas100-dff2840e` — just install ntfy and subscribe to it. Steps 2–4 below are done.
+
 You need 3 files: `monitor.py`, `requirements.txt`, `monitor.yml`.
 
 ## Step 1 — Install the ntfy app (your notifications)

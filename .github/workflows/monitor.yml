@@ -4,12 +4,20 @@ on:
   schedule:
     # Every 5 minutes, Sunday evening to Friday night (UTC). GitHub may run a few minutes late.
     - cron: "*/5 * * * 0-5"
+  push:
+    branches: [main]
+    paths: ["monitor.py", ".github/workflows/monitor.yml"]
   workflow_dispatch:
     inputs:
       test:
         description: "Send a test notification"
         type: boolean
         default: false
+
+env:
+  # Your ntfy topic. Subscribe to this exact name in the ntfy app.
+  # (A NTFY_TOPIC repository secret, if you add one, takes priority.)
+  NTFY_TOPIC: ${{ secrets.NTFY_TOPIC || 'niv-nas100-dff2840e' }}
 
 permissions:
   contents: write
@@ -33,15 +41,12 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Send test notification
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.test) }}
         run: python monitor.py --test
 
       - name: Check market and alert
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
         env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           ACTIVE_HOURS_DUBAI: ${{ vars.ACTIVE_HOURS_DUBAI || '0-24' }}
         run: python monitor.py
 
